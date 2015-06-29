@@ -4,7 +4,16 @@
 #
 ###########################################################
 
-# TBD: add checks for octave and for Rscript
+OCTAVE_CMD=$(shell which octave)
+R_CMD=$(shell which Rscript)
+
+ifeq ($(OCTAVE_CMD),)
+$(error octave not available, please install along with signal and tsa packages)
+endif
+
+ifeq ($(R_CMD),)
+$(error Rscript not available, please install base-R from http://cran.us.r-project.org/)
+endif
 
 # Standard directories
 LOCAL=$(shell pwd)
@@ -33,8 +42,6 @@ REF_CMD=extract_reference_GCIs
 METRICS_CMD=compute_Naylor_GCI_metrics
 OCTAVE=octave --silent --eval
 
-# TBD: remove the ARCTIC!!
-# TBD: start with just 10 files to analyse
 AUDIOFILES=$(shell find $(AUDIO) -type f -mindepth 1 -name "*.wav")
 ESPSFILES=$(shell find $(ESPSDATA) -type f -mindepth 1 -name "*.pm")
 SPEAKERDIR=$(shell find data/audio/ -type d -mindepth 2 -maxdepth 2  | cut -d/ -f 4,5 | grep -v readVQ)
@@ -64,7 +71,6 @@ max_f0=500
 
 all: $(REAPER_CMD) $(REAPER_GCI) $(ESPS_GCI) $(REF_GCI) $(SPEAKER_METRICS) $(VQ_METRICS)
 
-reaper: $(REAPER_CMD)
 # TBD: Need to compile R packages!
 
 #########################
@@ -134,8 +140,6 @@ $(VQ_METRICS):
 	@paste -d, file_name.tmp metrics.tmp >> $(VQ_METRICS_TABLE)
 	@rm file_name.tmp
 	@rm metrics.tmp
-
-# TBD: add VQ metrics here
 
 
 #########################
