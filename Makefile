@@ -5,13 +5,13 @@
 ###########################################################
 
 OCTAVE_CMD=$(shell which octave)
-R_CMD=$(shell which Rscript)
+Rscript_CMD=$(shell which Rscript)
 
 ifeq ($(OCTAVE_CMD),)
 $(error octave not available, please install along with signal and tsa packages)
 endif
 
-ifeq ($(R_CMD),)
+ifeq ($(Rscript_CMD),)
 $(error Rscript not available, please install base-R from http://cran.us.r-project.org/)
 endif
 
@@ -57,6 +57,13 @@ VQS+=$(addprefix $(SEDREAMS)readVQ/, $(VQDIR))
 SPEAKER_METRICS_TABLE=$(RESULTS)metrics_by_speaker.csv
 VQ_METRICS_TABLE=$(RESULTS)metrics_by_VQ.csv
 
+# R packages
+R_INSTALL_CMD=R CMD INSTALL
+R_LIBRARY=$(BUILD)R_library/
+R_PACKAGES=ggplot2_1.0.1.tar.gz
+R_PACKAGE_TARGETS:=$(addprefix $(R_LIBRARY), $(R_PACKAGES))
+R_CRAN=http://cran.us.r-project.org/src/contrib
+
 # GCI targets
 REAPER_GCI:=$(patsubst $(AUDIO)%.wav, $(REAPER)%.csv, $(AUDIOFILES))
 ESPS_GCI:=$(patsubst $(ESPSDATA)%.pm, $(ESPS)%.csv, $(ESPSFILES))
@@ -69,9 +76,18 @@ VQ_METRICS:=$(patsubst $(BUILD)%, $(METRICS)%/GCI_metrics.csv,$(VQS))
 min_f0=50
 max_f0=500
 
-all: $(REAPER_CMD) $(REAPER_GCI) $(ESPS_GCI) $(REF_GCI) $(SPEAKER_METRICS) $(VQ_METRICS)
+all: $(R_PACKAGE_TARGETS) $(REAPER_CMD) $(REAPER_GCI) $(ESPS_GCI) $(REF_GCI) $(SEDREAMS_GCI) $(SPEAKER_METRICS) $(VQ_METRICS)
 
-# TBD: Need to compile R packages!
+#########################
+# Fetch R packages and compile
+#########################
+
+$(R_PACKAGE_TARGETS):
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	@echo "Downloading $@"
+	@curl $(R_CRAN)/$(notdir $@) -o $@
+	@$(R_INSTALL_CMD) -l $(R_LIBRARY) $@
+
 
 #########################
 # Compile REAPER
@@ -79,11 +95,11 @@ all: $(REAPER_CMD) $(REAPER_GCI) $(ESPS_GCI) $(REF_GCI) $(SPEAKER_METRICS) $(VQ_
 
 $(REAPER_CMD):
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-	@echo "Fetching REAPER code"
+	@echo "[INFO] Fetching REAPER code"
 	@git clone https://github.com/google/REAPER.git
 	@mv $(LOCAL)/REAPER/ $(BUILD)/REAPER/
 	@[ -d $(@D) ] || mkdir -p $(@D)
-	@echo "Compiling REAPER code"
+	@echo "[INFO] Compiling REAPER code"
 	@cd $(BUILD)REAPER/BUILD/; cmake ..; make; cd $(LOCAL)
 
 #########################
@@ -93,25 +109,25 @@ $(REAPER_CMD):
 
 $(REAPER_GCI): $(REAPER)%.csv : $(AUDIO)%.wav
 	@[ -d $(@D) ] || mkdir -p $(@D)
-	@echo "REAPER GCI compute:    $(notdir $@)"
+	@echo "[INFO] REAPER GCI compute:    $(notdir $@)"
 	@$(REAPER_CMD) -i $< -p $@.tmp -a -m $(min_f0) -x $(max_f0)
 	@cat $@.tmp | sed -e '1,7d' | cut -d " " -f 1 > $@
 	@rm $@.tmp
 
 $(ESPS_GCI): $(ESPS)%.csv : $(ESPSDATA)%.pm
 	@[ -d $(@D) ] || mkdir -p $(@D)
-	@echo "ESPS GCI compute:    $(notdir $@)"
+	@echo "[INFO] ESPS GCI compute:    $(notdir $@)"
 	@cat $< | awk --field-searator="\\t" '{print $$2}' > $@
 
-#$(SEDREAMS_GCI): $(SEDREAMS)%.csv : $(AUDIO)%.wav
-#	@[ -d $(@D) ] || mkdir -p $(@D)
-#	@echo "SEDREAMS GCI compute:    $(notdir $@)"
-#	@cd $(LIBOCTAVE); $(OCTAVE) "$(SEDREAMS_CMD)('$<','$@')"; cd $(LOCAL)
+$(SEDREAMS_GCI): $(SEDREAMS)%.csv : $(AUDIO)%.wav
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	@echo "SEDREAMS GCI compute:    $(notdir $@)"
+	@cd $(LIBOCTAVE); $(OCTAVE) "$(SEDREAMS_CMD)('$<','$@')"; cd $(LOCAL)
 
 $(REF_GCI): $(REFERENCE)%.csv : $(AUDIO)%.wav
 	@[ -d $(@D) ] || mkdir -p $(@D)
-	@echo "Reference GCI compute:    $(notdir $@)"
-	cd $(LIBOCTAVE); $(OCTAVE) "$(REF_CMD)('$<','$@')"; cd $(LOCAL)
+	@echo "[INFO] Reference GCI compute:    $(notdir $@)"
+	@cd $(LIBOCTAVE); $(OCTAVE) "$(REF_CMD)('$<','$@')"; cd $(LOCAL)
 
 ########################################
 # Compute metrics at the speaker level
@@ -140,6 +156,15 @@ $(VQ_METRICS):
 	@paste -d, file_name.tmp metrics.tmp >> $(VQ_METRICS_TABLE)
 	@rm file_name.tmp
 	@rm metrics.tmp
+
+########################################
+# Do plotting 
+########################################
+
+
+########################################
+# Compute ANOVA stats
+########################################
 
 
 #########################

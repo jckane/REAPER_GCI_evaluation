@@ -61,7 +61,8 @@ elseif ( maxLags > 0 )
 end
 
 % Derive reference GCIs from dEGG through magnitude threshold
-[peak_amp,peak_idx] = findpeaks( dEGG, "MinPeakDistance", (1/max_f0)*fs ); 
+%[peak_amp,peak_idx] = findpeaks( dEGG, "MinPeakDistance", (1/max_f0)*fs );
+[peak_amp,peak_idx] = findpeaks( dEGG ); 
 GCI = peak_idx( peak_amp > dEGGthresh );
 GCI = GCI / fs;
 
