@@ -23,6 +23,7 @@ LIB=$(LOCAL)/lib/
 
 # Additional directories
 LIBOCTAVE=$(LIB)octave/
+LIBR=$(LIB)R/
 AUDIO=$(DATA)audio/
 ESPSDATA=$(DATA)ESPS/
 EGGDATA=$(DATA)EGG/
@@ -41,6 +42,8 @@ SEDREAMS_CMD=extract_GCI_SEDREAMS
 REF_CMD=extract_reference_GCIs
 METRICS_CMD=compute_Naylor_GCI_metrics
 OCTAVE=octave --silent --eval
+PLOT_SPEAKER_METRIC=$(LIBR)boxplot_speaker.R
+PLOT_VQ_METRIC=$(LIBR)boxplot_VQ.R
 
 AUDIOFILES=$(shell find $(AUDIO) -type f -mindepth 1 -name "*.wav")
 ESPSFILES=$(shell find $(ESPSDATA) -type f -mindepth 1 -name "*.pm")
@@ -61,6 +64,7 @@ VQ_METRICS_TABLE=$(RESULTS)metrics_by_VQ.csv
 R_INSTALL_CMD=R CMD INSTALL
 R_LIBRARY=$(BUILD)R_library/
 R_PACKAGES=ggplot2_1.0.1.tar.gz
+R_PACKAGES+=reshape2_1.4.1.tar.gz
 R_PACKAGE_TARGETS:=$(addprefix $(R_LIBRARY), $(R_PACKAGES))
 R_CRAN=http://cran.us.r-project.org/src/contrib
 
@@ -69,14 +73,18 @@ REAPER_GCI:=$(patsubst $(AUDIO)%.wav, $(REAPER)%.csv, $(AUDIOFILES))
 ESPS_GCI:=$(patsubst $(ESPSDATA)%.pm, $(ESPS)%.csv, $(ESPSFILES))
 SEDREAMS_GCI:=$(patsubst $(AUDIO)%.wav, $(SEDREAMS)%.csv, $(AUDIOFILES))
 REF_GCI:=$(patsubst $(AUDIO)%.wav, $(REFERENCE)%.csv, $(AUDIOFILES))
+
+# Other targets
 SPEAKER_METRICS:=$(patsubst $(BUILD)%, $(METRICS)%/GCI_metrics.csv,$(SPEAKERS))
 VQ_METRICS:=$(patsubst $(BUILD)%, $(METRICS)%/GCI_metrics.csv,$(VQS))
+PLOT_SPEAKER_METRICS:=$(RESULTS)GCI_metrics_speaker_level.pdf
+PLOT_VQ_METRICS:=$(RESULTS)GCI_metrics_VQ_level.pdf
 
 # Algorithm settings
 min_f0=50
 max_f0=500
 
-all: $(R_PACKAGE_TARGETS) $(REAPER_CMD) $(REAPER_GCI) $(ESPS_GCI) $(REF_GCI) $(SEDREAMS_GCI) $(SPEAKER_METRICS) $(VQ_METRICS)
+all: $(R_PACKAGE_TARGETS) $(REAPER_CMD) $(REAPER_GCI) $(ESPS_GCI) $(REF_GCI) $(SEDREAMS_GCI) $(SPEAKER_METRICS) $(VQ_METRICS) $(PLOT_SPEAKER_METRICS) $(PLOT_VQ_METRICS)
 
 #########################
 # Fetch R packages and compile
@@ -161,23 +169,23 @@ $(VQ_METRICS):
 # Do plotting 
 ########################################
 
+$(PLOT_SPEAKER_METRICS):
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	@echo "Plotting GCI metrics by speaker"
+	@$(Rscript_CMD) $(PLOT_SPEAKER_METRIC) $(SPEAKER_METRICS_TABLE) $(R_LIBRARY) $@
+
+$(PLOT_VQ_METRICS):
+	@[ -d $(@D) ] || mkdir -p $(@D)
+	@echo "Plotting GCI metrics by speaker"
+	@$(Rscript_CMD) $(PLOT_VQ_METRIC) $(VQ_METRICS_TABLE) $(R_LIBRARY) $(RESULTS)
+
 
 ########################################
 # Compute ANOVA stats
 ########################################
 
 
-#########################
-# BOILERPLATE
-#########################
 
 clean:
 	rm -rf ./BUILD
-
-show-%:
-	@echo "$*= <$($*)>"
-
-showlist-%:
-	@echo "$*="
-	@$(if $(strip $($*)),for x in $(foreach y,$(subst ",\",$($*)),"$y"); do echo "  $$x"; done)
 

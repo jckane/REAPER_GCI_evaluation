@@ -1,0 +1,4 @@
+The audio/EGG data used in this experiment consists of:
+- 3 speakers from the ARCTIC database: http://festvox.org/cmu_arctic/
+- 10 speakers in the APLAWD database: please contact Patrick Naylor p.naylor@imperial.ac.uk for permission
+- 6 speakers from the readVQ database: please contact John Kane kanejo@tcd.ie
