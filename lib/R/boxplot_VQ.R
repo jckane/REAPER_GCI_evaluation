@@ -40,7 +40,7 @@ df_MR <- df[df[,5]=="MR",]
 df_FAR <- df[df[,5]=="FAR",]
 df_IDA <- df[df[,5]=="IDA",]
 
-# Plot IR
+# Plot IR and compute ANOVA
 output_path <- paste(output_directory,
                      "GCI_IR_by_VQ.pdf",
                      sep=.Platform$file.sep)
@@ -50,6 +50,14 @@ p1 <- ggplot(df_IR, aes(Algorithm,value,fill=Algorithm)) +
   ggtitle("Identification Rate (IR)")
 print(p1)
 TMP <- dev.off()
+
+output_path <- paste(output_directory,
+                     "ANOVA_IR_VQ.csv",
+                     sep=.Platform$file.sep)
+IR.aov <- aov(value ~ Algorithm*VQ, data=df_IR)
+sink(output_path)
+summary(IR.aov)
+sink()
 
 # Plot MR
 output_path <- paste(output_directory,
@@ -62,6 +70,14 @@ p1 <- ggplot(df_MR, aes(Algorithm,value,fill=Algorithm)) +
 print(p1)
 TMP <- dev.off()
 
+output_path <- paste(output_directory,
+                     "ANOVA_MR_VQ.csv",
+                     sep=.Platform$file.sep)
+MR.aov <- aov(value ~ Algorithm*VQ, data=df_MR)
+sink(output_path)
+summary(MR.aov)
+sink()
+
 # Plot FAR
 output_path <- paste(output_directory,
                      "GCI_FAR_by_VQ.pdf",
@@ -72,6 +88,14 @@ p1 <- ggplot(df_FAR, aes(Algorithm,value,fill=Algorithm)) +
   ggtitle("False Alarm Rate (FAR)")
 print(p1)
 TMP <- dev.off()
+
+output_path <- paste(output_directory,
+                     "ANOVA_FAR_VQ.csv",
+                     sep=.Platform$file.sep)
+FAR.aov <- aov(value ~ Algorithm*VQ, data=df_FAR)
+sink(output_path)
+summary(FAR.aov)
+sink()
 
 # Plot IDA
 output_path <- paste(output_directory,
@@ -84,3 +108,10 @@ p1 <- ggplot(df_IDA, aes(Algorithm,value,fill=Algorithm)) +
 print(p1)
 TMP <- dev.off()
 
+output_path <- paste(output_directory,
+                     "ANOVA_IDA_VQ.csv",
+                     sep=.Platform$file.sep)
+IDA.aov <- aov(value ~ Algorithm*VQ, data=df_IDA)
+sink(output_path)
+summary(IDA.aov)
+sink()

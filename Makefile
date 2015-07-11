@@ -166,23 +166,19 @@ $(VQ_METRICS):
 	@rm metrics.tmp
 
 ########################################
-# Do plotting 
+# Do plotting and ANOVA statistics
 ########################################
 
 $(PLOT_SPEAKER_METRICS):
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	@echo "Plotting GCI metrics by speaker"
-	@$(Rscript_CMD) $(PLOT_SPEAKER_METRIC) $(SPEAKER_METRICS_TABLE) $(R_LIBRARY) $@
+	@$(Rscript_CMD) $(PLOT_SPEAKER_METRIC) $(SPEAKER_METRICS_TABLE) $(R_LIBRARY) $(RESULTS)
 
 $(PLOT_VQ_METRICS):
 	@[ -d $(@D) ] || mkdir -p $(@D)
 	@echo "Plotting GCI metrics by speaker"
 	@$(Rscript_CMD) $(PLOT_VQ_METRIC) $(VQ_METRICS_TABLE) $(R_LIBRARY) $(RESULTS)
 
-
-########################################
-# Compute ANOVA stats
-########################################
 
 
 
