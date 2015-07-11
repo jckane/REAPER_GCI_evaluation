@@ -9,8 +9,6 @@ metricsCSV <- args[1]
 RLibrary <- args[2]
 output_directory <- args[3]
 
-
-#data_file <- "/Users/jkane/Desktop/GCI_study/REAPER_GCI_evaluation/BUILD/Results/metrics_by_VQ.csv"
 data <- read.table(metricsCSV,header=FALSE,sep=",")
 library(reshape2,lib.loc=RLibrary)
 library(ggplot2,lib.loc=RLibrary)
